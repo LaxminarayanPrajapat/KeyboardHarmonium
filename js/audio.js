@@ -326,76 +326,115 @@ const HarmoniumAudio = (() => {
         osc.stop(now + 0.4);
     }
 
-    // Strong heavy warning sound on typing error - deep, harsh, alarming
+    // Comedic "Fhaaa" meme clip on typing error - plays the real sound sample
+    let fhaahAudio = null;
+
+    function getFhaahAudio() {
+        if (!fhaahAudio) {
+            fhaahAudio = new Audio('assets/faaah.mp3');
+            fhaahAudio.preload = 'auto';
+            fhaahAudio.volume = 0.9;
+        }
+        return fhaahAudio;
+    }
+
+    // Call during a real user gesture (e.g. level click) so browsers that
+    // block autoplay-with-sound unlock this element for later playback.
+    function unlockErrorAudio() {
+        if (!soundEnabled) return;
+        const a = getFhaahAudio();
+        try {
+            a.muted = true;
+            const p = a.play();
+            if (p) {
+                p.then(() => {
+                    a.pause();
+                    a.currentTime = 0;
+                    a.muted = false;
+                }).catch(() => { a.muted = false; });
+            }
+        } catch (e) { /* ignore unlock failures */ }
+    }
+
     function playErrorSound() {
-        if (!soundEnabled || !audioCtx) return;
+        if (!soundEnabled) return;
+
+        const a = getFhaahAudio();
+        try {
+            // Restart the clip from the beginning on every wrong key
+            a.currentTime = 0;
+            const p = a.play();
+            if (p) {
+                p.catch(err => {
+                    console.warn('Fhaaa mp3 blocked, using synth fallback:', err);
+                    synthWailFallback();
+                });
+            } else {
+                synthWailFallback();
+            }
+        } catch (e) {
+            console.warn('Could not play error sound:', e);
+            synthWailFallback();
+        }
+    }
+
+    // Guaranteed-to-play Web Audio wail (same pipeline as the harmonium notes).
+    // Used if the browser blocks the mp3 element's playback.
+    function synthWailFallback() {
+        init();
+        if (!audioCtx) return;
 
         const now = audioCtx.currentTime;
+        const dur = 0.9;
 
-        // Dense, dark frequency cluster (low dissonant beating)
-        // 233 Hz + 220 Hz = minor second, very "wrong" feeling
-        const cluster = [
-            { freq: 220, type: 'sawtooth', amp: 0.42 },
-            { freq: 233, type: 'square',   amp: 0.30 },
-        ];
+        const voice = audioCtx.createOscillator();
+        voice.type = 'sawtooth';
+        voice.frequency.setValueAtTime(430, now);
+        voice.frequency.exponentialRampToValueAtTime(540, now + 0.1);
+        voice.frequency.setTargetAtTime(350, now + 0.2, 0.22);
 
-        // Distortion shaper for a harsh, screaming edge
-        const shaper = audioCtx.createWaveShaper();
-        const curve = new Float32Array(256);
-        for (let i = 0; i < 256; i++) {
-            const x = (i / 128) - 1;
-            curve[i] = Math.tanh(x * 3.2);
-        }
-        shaper.curve = curve;
+        const voice2 = audioCtx.createOscillator();
+        voice2.type = 'square';
+        voice2.frequency.setValueAtTime(433, now);
+        voice2.frequency.exponentialRampToValueAtTime(543, now + 0.1);
+        voice2.frequency.setTargetAtTime(353, now + 0.2, 0.22);
 
-        cluster.forEach(({ freq, type, amp }) => {
-            const osc = audioCtx.createOscillator();
-            osc.type = type;
-            osc.frequency.value = freq;
+        const lfo = audioCtx.createOscillator();
+        lfo.frequency.value = 6;
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 28;
+        lfo.connect(lfoGain);
+        lfoGain.connect(voice.frequency);
+        lfoGain.connect(voice2.frequency);
 
-            // Deep, slow vibrato for tense alarm wobble
-            const lfo = audioCtx.createOscillator();
-            lfo.frequency.value = 7;
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 6;
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc.frequency);
+        const formant = audioCtx.createBiquadFilter();
+        formant.type = 'bandpass';
+        formant.frequency.value = 950;
+        formant.Q.value = 1.2;
 
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'sawtooth';
-            osc2.frequency.value = freq * 1.005; // slight detune = rough chorus
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.5, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
-            // Heavy, hard-hitting envelope: punchy attack, long angry decay
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.0001, now);
-            gain.gain.exponentialRampToValueAtTime(amp, now + 0.006);
-            gain.gain.setTargetAtTime(0.0001, now + 0.12, 0.16);
+        voice.connect(formant);
+        voice2.connect(formant);
+        formant.connect(gain);
+        gain.connect(masterGain);
 
-            osc.connect(shaper);
-            osc2.connect(shaper);
-            shaper.connect(gain);
-            gain.connect(masterGain);
+        voice.start(now);
+        voice.stop(now + dur + 0.05);
+        voice2.start(now);
+        voice2.stop(now + dur + 0.05);
+        lfo.start(now);
+        lfo.stop(now + dur + 0.05);
 
-            osc.start(now);
-            osc.stop(now + 0.7);
-            osc2.start(now);
-            osc2.stop(now + 0.7);
-            lfo.start(now);
-            lfo.stop(now + 0.7);
-        });
-
-        // Extra deep sub-layer for body/weight
-        const sub = audioCtx.createOscillator();
-        sub.type = 'sine';
-        sub.frequency.value = 55;
-        const subGain = audioCtx.createGain();
-        subGain.gain.setValueAtTime(0.0001, now);
-        subGain.gain.exponentialRampToValueAtTime(0.5, now + 0.01);
-        subGain.gain.setTargetAtTime(0.0001, now + 0.15, 0.18);
-        sub.connect(subGain);
-        subGain.connect(masterGain);
-        sub.start(now);
-        sub.stop(now + 0.7);
+        audioNodes.add(gain);
+        gain.onended = () => {
+            formant.disconnect();
+            gain.disconnect();
+            audioNodes.delete(gain);
+        };
     }
 
     /* ---------- Public API ---------- */
@@ -423,6 +462,7 @@ const HarmoniumAudio = (() => {
         },
 
         playError: playErrorSound,
+        unlockErrorAudio,
 
         setSoundEnabled(on) {
             soundEnabled = on;

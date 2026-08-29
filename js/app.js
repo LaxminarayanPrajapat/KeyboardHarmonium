@@ -83,6 +83,8 @@ const App = (() => {
         UI.setFeedbackHint(LEVELS[level].hint);
 
         els.hiddenInput.focus();
+        // Pre-unlock the "Fhaaa" error clip inside this real click gesture
+        HarmoniumAudio.unlockErrorAudio();
         // Show the start of the paragraph instead of jumping down to the focus helper
         window.scrollTo(0, 0);
     }
