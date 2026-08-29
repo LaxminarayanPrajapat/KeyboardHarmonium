@@ -202,9 +202,11 @@ body {
     gap: 12px;
 }
 
-.logo-icon {
-    font-size: 32px;
-    animation: logoSpin 4s ease-in-out infinite;
+.logo-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     display: inline-block;
 }
 
@@ -793,6 +795,8 @@ body {
 
 .hide-input {
     position: absolute;
+    top: 0;
+    left: 0;
     opacity: 0;
     height: 0;
     overflow: hidden;

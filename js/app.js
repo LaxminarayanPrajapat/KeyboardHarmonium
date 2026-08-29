@@ -83,6 +83,8 @@ const App = (() => {
         UI.setFeedbackHint(LEVELS[level].hint);
 
         els.hiddenInput.focus();
+        // Show the start of the paragraph instead of jumping down to the focus helper
+        window.scrollTo(0, 0);
     }
 
     /* ---------- Keyboard Handling ---------- */
@@ -283,7 +285,7 @@ const App = (() => {
 
         // Focus typing display
         els.textDisplay.addEventListener('click', () => {
-            els.hiddenInput.focus();
+            els.hiddenInput.focus({ preventScroll: true });
         });
 
         // Global keyboard
