@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#261338"/>
+      <stop offset="0.55" stop-color="#4a1f52"/>
+      <stop offset="1" stop-color="#7a2d5e"/>
+    </linearGradient>
+    <linearGradient id="noteG" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffd32a"/>
+      <stop offset="1" stop-color="#ff7a59"/>
+    </linearGradient>
+    <linearGradient id="keyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f2ff"/>
+      <stop offset="1" stop-color="#d9c9ef"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <g transform="rotate(-16 33 31)">
+    <ellipse cx="31.5" cy="42" rx="4.6" ry="3.4" fill="url(#noteG)"/>
+    <ellipse cx="31.5" cy="42" rx="2.1" ry="1.6" fill="#14091f" opacity="0.35"/>
+    <rect x="36.5" y="12" width="3" height="30" rx="1.5" fill="url(#noteG)"/>
+    <path d="M39.5 16 Q34 14.5 36.8 9.6 L39.6 11.4 Q39 14 42.2 13.2 Z" fill="url(#noteG)"/>
+
+    <ellipse cx="54" cy="37" rx="4.6" ry="3.4" fill="url(#noteG)"/>
+    <ellipse cx="54" cy="37" rx="2.1" ry="1.6" fill="#14091f" opacity="0.35"/>
+  </g>
+
+  <g>
+    <rect x="7" y="47" width="9.5" height="11" rx="2.2" fill="url(#keyG)"/>
+    <rect x="18" y="47" width="9.5" height="11" rx="2.2" fill="url(#keyG)"/>
+    <rect x="29" y="47" width="9.5" height="11" rx="2.2" fill="#ffd32a"/>
+    <rect x="40" y="47" width="9.5" height="11" rx="2.2" fill="url(#keyG)"/>
+    <rect x="51" y="47" width="9.5" height="11" rx="2.2" fill="url(#keyG)"/>
+  </g>
+  <rect x="7" y="48" width="53.5" height="2.4" rx="1.2" fill="#14091f" opacity="0.5"/>
+</svg>
