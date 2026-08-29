@@ -31,16 +31,25 @@ const App = (() => {
     async function loadTexts() {
         try {
             const res = await fetch('assets/texts.json');
-            textPool = await res.json();
+            if (res.ok) {
+                const data = await res.json();
+                if (isValidPool(data)) {
+                    textPool = data;
+                    return;
+                }
+            }
         } catch (e) {
-            console.warn('Could not load text JSON, using fallback:', e);
-            textPool = {
-                easy: ['the cat sat on the mat and sang a song'],
-                mid: ['practice daily, and you will improve quickly!'],
-                beast: ['Practice daily, and you will improve; the road is long but steady.'],
-                nums: ['4827 9013 7740 5621'],
-            };
+            console.warn('Could not fetch text JSON, using embedded pool:', e);
         }
+        if (isValidPool(window.TEXTS_POOL)) {
+            textPool = window.TEXTS_POOL;
+        }
+    }
+
+    function isValidPool(pool) {
+        return pool && ['easy', 'mid', 'beast', 'nums'].every(k =>
+            Array.isArray(pool[k]) && pool[k].some(t => typeof t === 'string' && t.length >= 500)
+        );
     }
 
     function pickText() {

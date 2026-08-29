@@ -108,6 +108,79 @@ body {
     50% { transform: translateY(-40px) rotate(20deg); }
 }
 
+/* ===== Responsive: Medium screens (laptops with shorter viewport) ===== */
+@media (min-width: 901px) and (max-height: 820px) {
+    .hero {
+        padding: 36px 0 16px;
+        min-height: auto;
+    }
+
+    .hero-title { font-size: 44px; margin-bottom: 14px; }
+    .hero-subtitle { margin-bottom: 24px; font-size: 15px; }
+
+    .harmonium-visual {
+        grid-template-columns: repeat(7, 44px);
+        gap: 7px;
+    }
+
+    .h-key { width: 44px; height: 170px; }
+    .h-key::after { font-size: 12px; }
+
+    .level-grid { margin-top: 18px; }
+    .stats-bar { margin-top: 12px; margin-bottom: 16px; }
+}
+
+/* ===== Responsive: Large screens (desktop / full HD) ===== */
+@media (min-width: 1400px) {
+    .container { max-width: 1280px; }
+
+    .hero-title { font-size: 68px; }
+    .hero-subtitle { max-width: 540px; font-size: 18px; }
+
+    .harmonium-visual {
+        grid-template-columns: repeat(7, 72px);
+        gap: 12px;
+    }
+
+    .h-key { width: 72px; height: 280px; }
+    .h-key::after { font-size: 16px; }
+
+    .text-display { font-size: 27px; padding: 34px; }
+    .stat-value { font-size: 32px; }
+}
+
+/* ===== Responsive: Very large screens (big monitors) ===== */
+@media (min-width: 1920px) {
+    .container { max-width: 1500px; }
+
+    .hero {
+        padding: 90px 0 50px;
+        min-height: auto;
+    }
+
+    .hero-title { font-size: 78px; }
+
+    .harmonium-visual {
+        grid-template-columns: repeat(7, 85px);
+        gap: 14px;
+    }
+
+    .h-key { width: 85px; height: 330px; }
+
+    .level-grid { max-width: 620px; gap: 16px; }
+
+    .typing-panel { padding: 36px; }
+    .text-display { font-size: 30px; line-height: 2.1; padding: 40px; }
+    .stats-bar { gap: 16px; }
+    .stat { padding: 24px 20px; }
+    .stat-value { font-size: 36px; }
+    .stat-label { font-size: 13px; }
+    .stat-unit { font-size: 13px; }
+
+    .modal { max-width: 540px; padding: 56px; }
+    .result-score { font-size: 84px; }
+}
+
 /* ===== Header ===== */
 .header {
     display: flex;
