@@ -10,12 +10,13 @@ const HarmoniumAudio = (() => {
     let audioCtx = null;
     let masterGain = null;
     let soundEnabled = true;
-    let clickEnabled = true;
     let scaleStyle = 'sargam';
 
-    // Indian Sargam scale (Sa Re Ga Ma Pa Dha Ni) based on C major / G sa-pa
-    // Harmonium uses equal temperament; base Sa = C#4 (middle octave)
-    const SA_BASE = 269.29; // C#4 as Sa
+    // Harmonium base: Indian scale Sa = C#4 (middle octave)
+    const SA_BASE = 269.29;
+
+    // Western base: Sa becomes C4 - the natural do-re-mi scale
+    const C4_BASE = 261.63;
 
     const SEMITONE = 1.0594630943592953; // 2^(1/12)
 
@@ -30,15 +31,15 @@ const HarmoniumAudio = (() => {
         'ni': 11,   // Ni  - Ti
     };
 
-    // Western note names for display
+    // Note names for display (Indian sargam or western note letter)
     const NOTE_NAMES = {
-        sa: { sargam: 'सा', western: 'C#' },
-        re: { sargam: 'रे', western: 'D#' },
-        ga: { sargam: 'गा', western: 'F' },
-        ma: { sargam: 'मा', western: 'F#' },
-        pa: { sargam: 'पा', western: 'G#' },
-        dha: { sargam: 'धा', western: 'A#' },
-        ni: { sargam: 'नी', western: 'C' },
+        sa: { sargam: 'सा', western: 'C' },
+        re: { sargam: 'रे', western: 'D' },
+        ga: { sargam: 'गा', western: 'E' },
+        ma: { sargam: 'मा', western: 'F' },
+        pa: { sargam: 'पा', western: 'G' },
+        dha: { sargam: 'धा', western: 'A' },
+        ni: { sargam: 'नी', western: 'B' },
     };
 
     // Color for each note (used by UI)
@@ -110,7 +111,8 @@ const HarmoniumAudio = (() => {
 
     function getFrequency(note, octave) {
         const semitone = SARGAM[note] + (octave * 12);
-        return SA_BASE * Math.pow(SEMITONE, semitone);
+        const base = scaleStyle === 'western' ? C4_BASE : SA_BASE;
+        return base * Math.pow(SEMITONE, semitone);
     }
 
     function getKeyNote(key) {
@@ -189,6 +191,12 @@ const HarmoniumAudio = (() => {
     function playNote(noteObj, velocity = 1) {
         if (!soundEnabled || !audioCtx) return;
 
+        if (scaleStyle === 'western') return playWesternNote(noteObj, velocity);
+        return playHarmoniumNote(noteObj, velocity);
+    }
+
+    // Indian harmonium reed tone - sawtooth + harmonics through a mellow lowpass
+    function playHarmoniumNote(noteObj, velocity) {
         const now = audioCtx.currentTime;
         const freq = getFrequency(noteObj.note, noteObj.octave);
 
@@ -240,6 +248,63 @@ const HarmoniumAudio = (() => {
         return { freq, osc, gain };
     }
 
+    // Western music-box / celesta tone - bright plucked bells with a long warm tail
+    function playWesternNote(noteObj, velocity) {
+        const now = audioCtx.currentTime;
+        const freq = getFrequency(noteObj.note, noteObj.octave);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.3 * velocity, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+        // Glossy sine stack: fundamental + octave + two-octave bell shimmer
+        const osc1 = audioCtx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.value = freq;
+
+        const osc2 = audioCtx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.value = freq * 2;
+        const g2 = audioCtx.createGain();
+        g2.gain.value = 0.32;
+
+        const bell = audioCtx.createOscillator();
+        bell.type = 'sine';
+        bell.frequency.value = freq * 4;
+        const gBell = audioCtx.createGain();
+        gBell.gain.value = 0.1;
+
+        // Remove mud below the fundamental octave
+        const high = audioCtx.createBiquadFilter();
+        high.type = 'highpass';
+        high.frequency.value = 80;
+
+        osc1.connect(gain);
+        osc2.connect(g2);
+        g2.connect(gain);
+        bell.connect(gBell);
+        gBell.connect(gain);
+        gain.connect(high);
+        high.connect(masterGain);
+
+        osc1.start(now);
+        osc1.stop(now + 1.3);
+        osc2.start(now);
+        osc2.stop(now + 1.1);
+        bell.start(now);
+        bell.stop(now + 0.9);
+
+        audioNodes.add(gain);
+        gain.onended = () => {
+            high.disconnect();
+            gain.disconnect();
+            audioNodes.delete(gain);
+        };
+
+        return { freq, osc: osc1, gain };
+    }
+
     // Add a subtle bell-like melodic overtone (optional flourish)
     function playHarmonic(noteObj, velocity = 1) {
         if (!soundEnabled || !audioCtx) return;
@@ -259,29 +324,6 @@ const HarmoniumAudio = (() => {
         gain.connect(masterGain);
         osc.start(now);
         osc.stop(now + 0.4);
-    }
-
-    // Soft percussive click for keydown (tactile feel)
-    function playClick() {
-        if (!clickEnabled || !audioCtx) return;
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        osc.type = 'square';
-        osc.frequency.value = 1600 + Math.random() * 300;
-
-        const gain = audioCtx.createGain();
-        const clickGain = audioCtx.createGain();
-        clickGain.gain.value = 0.05;
-
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-
-        osc.connect(gain);
-        gain.connect(clickGain);
-        clickGain.connect(audioCtx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.05);
     }
 
     // Strong heavy warning sound on typing error - deep, harsh, alarming
@@ -367,9 +409,8 @@ const HarmoniumAudio = (() => {
             const note = getKeyNote(key);
             if (note) {
                 playNote(note);
-                playHarmonic(note);
+                if (scaleStyle !== 'western') playHarmonic(note);
             }
-            playClick();
             return note;
         },
 
@@ -385,10 +426,6 @@ const HarmoniumAudio = (() => {
 
         setSoundEnabled(on) {
             soundEnabled = on;
-        },
-
-        setClickEnabled(on) {
-            clickEnabled = on;
         },
 
         setScaleStyle(style) {

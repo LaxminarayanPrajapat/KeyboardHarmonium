@@ -15,7 +15,6 @@ const App = (() => {
     };
 
     let soundEnabled = true;
-    let clickEnabled = true;
     let scaleStyle = 'sargam';
 
     // Text pool + current level/text
@@ -246,12 +245,6 @@ const App = (() => {
             syncSoundIcon();
         });
 
-        const clickToggle = document.getElementById('clickSoundToggle');
-        clickToggle.addEventListener('change', () => {
-            clickEnabled = clickToggle.checked;
-            HarmoniumAudio.setClickEnabled(clickEnabled);
-        });
-
         // Scale style
         document.querySelectorAll('#scaleStyleControl button').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -310,13 +303,11 @@ const App = (() => {
 
         UI.init();
         HarmoniumAudio.setSoundEnabled(soundEnabled);
-        HarmoniumAudio.setClickEnabled(clickEnabled);
 
         await loadTexts();
         bindEvents();
 
         document.getElementById('soundOnToggle').checked = soundEnabled;
-        document.getElementById('clickSoundToggle').checked = clickEnabled;
         syncSoundIcon();
 
         // Gentle ambient particles on the levels page
