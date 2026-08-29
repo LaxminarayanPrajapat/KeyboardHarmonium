@@ -367,78 +367,10 @@ const HarmoniumAudio = (() => {
         try {
             // Restart the clip from the beginning
             a.currentTime = 0;
-            const p = a.play();
-            if (p) {
-                p.catch(err => {
-                    console.warn('Fhaaa mp3 blocked, using synth fallback:', err);
-                    synthWailFallback();
-                });
-            } else {
-                synthWailFallback();
-            }
+            a.play();
         } catch (e) {
             console.warn('Could not play error sound:', e);
-            synthWailFallback();
         }
-    }
-
-    // Guaranteed-to-play Web Audio wail (same pipeline as the harmonium notes).
-    // Used if the browser blocks the mp3 element's playback.
-    function synthWailFallback() {
-        init();
-        if (!audioCtx) return;
-
-        const now = audioCtx.currentTime;
-        const dur = 0.9;
-
-        const voice = audioCtx.createOscillator();
-        voice.type = 'sawtooth';
-        voice.frequency.setValueAtTime(430, now);
-        voice.frequency.exponentialRampToValueAtTime(540, now + 0.1);
-        voice.frequency.setTargetAtTime(350, now + 0.2, 0.22);
-
-        const voice2 = audioCtx.createOscillator();
-        voice2.type = 'square';
-        voice2.frequency.setValueAtTime(433, now);
-        voice2.frequency.exponentialRampToValueAtTime(543, now + 0.1);
-        voice2.frequency.setTargetAtTime(353, now + 0.2, 0.22);
-
-        const lfo = audioCtx.createOscillator();
-        lfo.frequency.value = 6;
-        const lfoGain = audioCtx.createGain();
-        lfoGain.gain.value = 28;
-        lfo.connect(lfoGain);
-        lfoGain.connect(voice.frequency);
-        lfoGain.connect(voice2.frequency);
-
-        const formant = audioCtx.createBiquadFilter();
-        formant.type = 'bandpass';
-        formant.frequency.value = 950;
-        formant.Q.value = 1.2;
-
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.5, now + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-        voice.connect(formant);
-        voice2.connect(formant);
-        formant.connect(gain);
-        gain.connect(masterGain);
-
-        voice.start(now);
-        voice.stop(now + dur + 0.05);
-        voice2.start(now);
-        voice2.stop(now + dur + 0.05);
-        lfo.start(now);
-        lfo.stop(now + dur + 0.05);
-
-        audioNodes.add(gain);
-        gain.onended = () => {
-            formant.disconnect();
-            gain.disconnect();
-            audioNodes.delete(gain);
-        };
     }
 
     /* ---------- Public API ---------- */
