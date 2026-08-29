@@ -360,8 +360,12 @@ const HarmoniumAudio = (() => {
         if (!soundEnabled) return;
 
         const a = getFhaahAudio();
+        // Let an in-progress Fhaah play out; don't restart it from the intro
+        // on every rapid wrong keystroke.
+        if (!a.paused) return;
+
         try {
-            // Restart the clip from the beginning on every wrong key
+            // Restart the clip from the beginning
             a.currentTime = 0;
             const p = a.play();
             if (p) {
