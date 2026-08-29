@@ -94,6 +94,21 @@ const UI = (() => {
         }
 
         els.textContent.appendChild(fragment);
+        scrollToCurrentChar();
+    }
+
+    // Keep the active character visible so the user never loses their position
+    function scrollToCurrentChar() {
+        const current = els.textContent.querySelector('.char-current');
+        if (!current) return;
+        const rect = current.getBoundingClientRect();
+        const topMargin = 96;
+        const bottomMargin = 120;
+        const outOfView =
+            rect.top < topMargin || rect.bottom > window.innerHeight - bottomMargin;
+        if (outOfView) {
+            current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
     }
 
     /* ---------- Stats ---------- */
