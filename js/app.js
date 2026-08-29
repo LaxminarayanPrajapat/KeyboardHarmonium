@@ -328,6 +328,12 @@ const App = (() => {
                 UI.spawnNoteParticle(notes[Math.floor(Math.random() * notes.length)]);
             }
         }, 3000);
+
+        // Deep link (e.g. from the 404 page): index.html?level=easy
+        const deepLevel = new URLSearchParams(window.location.search).get('level');
+        if (deepLevel && LEVELS[deepLevel]) {
+            startSession(deepLevel);
+        }
     }
 
     return { init };

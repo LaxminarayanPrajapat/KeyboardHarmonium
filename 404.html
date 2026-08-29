@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Harmonium Typist</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2d1b3d 0%, #4a1e54 40%, #6d2a6d 70%, #8a3a6e 100%);
+            color: #f5f0ff;
+            text-align: center;
+            padding: 24px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 56px 48px;
+            max-width: 520px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+        }
+        .icon { font-size: 72px; line-height: 1; }
+        h1 {
+            font-size: 88px;
+            font-weight: 800;
+            margin: 12px 0 8px;
+            background: linear-gradient(135deg, #ffd6e0, #ffb8c8, #c9b7ff, #a8d8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        p { color: #b8aac8; font-size: 16px; line-height: 1.7; margin-bottom: 28px; }
+        a {
+            display: inline-block;
+            padding: 14px 34px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ffd32a, #ff8c42, #ff4757);
+            color: #2d1b1b;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 140, 66, 0.4);
+        }
+        a:hover { transform: translateY(-3px); }
+        .menu {
+            margin-top: 26px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .menu a {
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f5f0ff;
+            box-shadow: none;
+        }
+        .menu a:hover { background: rgba(255, 255, 255, 0.18); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🎵</div>
+        <h1>404</h1>
+        <p>This note is out of key — the page you're looking for doesn't exist.</p>
+        <a href="./index.html">← Back to Home</a>
+        <div class="menu">
+            <a href="./index.html?level=easy">Easy Peasy</a>
+            <a href="./index.html?level=mid">Middle Ground</a>
+            <a href="./index.html?level=beast">Beast</a>
+            <a href="./index.html?level=nums">Numbers</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "Harmonium Typist - Musical Typing Practice",
+  "short_name": "Harmonium Typist",
+  "description": "Learn typing with beautiful harmonium sounds. Every key you press plays a musical note in Indian sargam or Western scale. No timer, four difficulty levels.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#140b24",
+  "theme_color": "#2d1b3d",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
