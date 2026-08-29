@@ -20,14 +20,10 @@
     <div class="music-notes float-note-5">♪</div>
 
     <header class="header">
-        <div class="logo">
+        <div class="logo" id="logoBtn" title="Back to levels">
             <span class="logo-icon">🎼</span>
             <h1 class="logo-text">Harmonium <span>Typist</span></h1>
         </div>
-        <nav class="nav">
-            <button class="nav-btn active" data-nav="practice">Practice</button>
-            <button class="nav-btn" data-nav="test">Test</button>
-        </nav>
         <div class="header-actions">
             <button class="icon-btn" id="soundToggle" title="Toggle Sound">🔊</button>
             <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
@@ -35,22 +31,41 @@
     </header>
 
     <main class="container">
-        <!-- Hero: Practice Page -->
-        <section class="hero section" id="heroPractice">
+        <!-- Hero: Level Selection -->
+        <section class="hero section" id="heroLevels">
             <div class="hero-content">
-                <span class="hero-badge practice-badge">🎵 Learning Practice · No Timer</span>
-                <h2 class="hero-title">Practice Your <span class="gradient-text">Sargam</span></h2>
+                <span class="hero-badge practice-badge">🎵 Practice · No Timer</span>
+                <h2 class="hero-title">Choose Your <span class="gradient-text">Level</span></h2>
                 <p class="hero-subtitle">
-                    Take your time and type at your own pace. Every keystroke sings a
-                    harmonium note — the middle row is your home octave (सा रे गा मा पा धा नी),
-                    the top row plays lower, and the bottom row plays higher.
+                    Pick a category and start typing at your own pace. Every keystroke
+                    sings a harmonium note — middle row is your home octave, top row
+                    plays lower, bottom row plays higher.
                 </p>
-                <div class="note-chart" id="noteChart"></div>
-                <div class="hero-buttons">
-                    <button class="btn-primary" id="startPracticeBtn">🎹 Start Practicing</button>
+
+                <div class="level-grid">
+                    <button class="level-card level-easy" data-level="easy">
+                        <span class="lc-icon">🎯</span>
+                        <span class="lc-title">Easy Peasy</span>
+                        <span class="lc-desc">simple lowercase · correct spacing · no numbers · no punctuation</span>
+                    </button>
+                    <button class="level-card level-mid" data-level="mid">
+                        <span class="lc-icon">✒️</span>
+                        <span class="lc-title">Middle Ground</span>
+                        <span class="lc-desc">lowercase with commas, periods &amp; question marks</span>
+                    </button>
+                    <button class="level-card level-beast" data-level="beast">
+                        <span class="lc-icon">🔥</span>
+                        <span class="lc-title">Beast</span>
+                        <span class="lc-desc">proper capitalization · full punctuation · long paragraphs</span>
+                    </button>
+                    <button class="level-card level-num" data-level="nums">
+                        <span class="lc-icon">🔢</span>
+                        <span class="lc-title">Numbers</span>
+                        <span class="lc-desc">random digit sequences — sharpen your ten-finger digits!</span>
+                    </button>
                 </div>
-                <p class="hero-footnote">Unlimited time · mistakes are just notes gone flat — keep going!</p>
             </div>
+
             <div class="hero-visual">
                 <div class="harmonium-visual" id="harmoniumVisual">
                     <div class="h-key" data-key="SaNote"></div>
@@ -66,66 +81,6 @@
             </div>
         </section>
 
-        <!-- Hero: Test Page -->
-        <section class="hero section hidden" id="heroTest">
-            <div class="hero-content">
-                <span class="hero-badge test-badge">🏆 Timed Typing Test</span>
-                <h2 class="hero-title">Take the <span class="gradient-text">Harmonium Test</span></h2>
-                <p class="hero-subtitle">
-                    A genuine, timed typing assessment. Your score blends speed and
-                    accuracy — no shortcuts, no padded numbers, just real progress.
-                </p>
-                <div class="score-info glass">
-                    <div class="score-formula">
-                        <span class="formula-label">Score</span>
-                        <span class="formula">WPM × Accuracy² × 2</span>
-                    </div>
-                    <div class="score-formula">
-                        <span class="formula-label">Speed</span>
-                        <span class="formula">Correct chars ÷ 5 ÷ minutes</span>
-                    </div>
-                </div>
-                <div class="test-settings">
-                    <div class="quick-setting">
-                        <label class="quick-label">Duration</label>
-                        <div class="segmented-control" id="testDurationControl">
-                            <button data-value="30">30s</button>
-                            <button data-value="60" class="active">60s</button>
-                            <button data-value="120">120s</button>
-                        </div>
-                    </div>
-                    <div class="quick-setting">
-                        <label class="quick-label">Difficulty</label>
-                        <div class="segmented-control" id="testDifficultyControl">
-                            <button data-value="easy">Easy</button>
-                            <button data-value="medium" class="active">Medium</button>
-                            <button data-value="hard">Hard</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="hero-buttons">
-                    <button class="btn-primary" id="takeTestBtn">🏆 Start Test</button>
-                </div>
-                <p class="hero-footnote">A 3-2-1 countdown starts the clock · stop when time runs out.</p>
-            </div>
-            <div class="hero-visual">
-                <div class="test-arcrec">
-                    <div class="arc-circle">
-                        <span class="arc-note">♪</span>
-                    </div>
-                    <p class="arc-title">Your Typing Rhythm</p>
-                </div>
-                <div class="note-flow" id="noteFlow2"></div>
-            </div>
-        </section>
-
-        <!-- Countdown Overlay -->
-        <div class="countdown-overlay hidden" id="countdownOverlay">
-            <div class="countdown-ring">
-                <span class="countdown-number" id="countdownNumber">3</span>
-            </div>
-        </div>
-
         <!-- Stats Bar -->
         <section class="stats-bar section hidden" id="statsBar">
             <div class="stat">
@@ -139,9 +94,9 @@
                 <span class="stat-unit">%</span>
             </div>
             <div class="stat">
-                <span class="stat-label" id="timeLabel">Time</span>
+                <span class="stat-label">Elapsed</span>
                 <span class="stat-value" id="timerDisplay">0</span>
-                <span class="stat-unit" id="timeUnit">s</span>
+                <span class="stat-unit">s</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Errors</span>
@@ -159,7 +114,8 @@
         <section class="typing-area section hidden" id="typingSection">
             <div class="typing-panel glass">
                 <div class="typing-toolbar">
-                    <span class="difficulty-label" id="difficultyLabel">Practice</span>
+                    <button class="btn-levels" id="levelsBtn">← Levels</button>
+                    <span class="difficulty-label" id="difficultyLabel">Easy Peasy</span>
                     <div class="typing-counts" id="typingCounts"></div>
                     <button class="btn-restart" id="restartBtn">↻ Restart</button>
                 </div>
@@ -184,7 +140,7 @@
         <div class="modal-overlay hidden" id="resultsModal">
             <div class="modal glass">
                 <button class="modal-close" id="modalClose">×</button>
-                <h3 class="modal-title" id="resultTitle">🎉 Test Complete!</h3>
+                <h3 class="modal-title" id="resultTitle">🎵 Practice Complete!</h3>
                 <div class="result-score" id="resultScore">0</div>
                 <div class="result-grade" id="resultGrade">A+</div>
                 <div class="result-stats">
@@ -208,6 +164,7 @@
                 <div class="result-actions">
                     <button class="btn-primary" id="tryAgainBtn">↻ Try Again</button>
                     <button class="btn-secondary" id="newTextBtn">📝 New Text</button>
+                    <button class="btn-secondary" id="changeLevelBtn">🎛 Change Level</button>
                 </div>
             </div>
         </div>
@@ -217,24 +174,6 @@
             <div class="modal glass settings-modal">
                 <button class="modal-close" id="settingsClose">×</button>
                 <h3 class="modal-title">⚙️ Settings</h3>
-
-                <div class="setting-group">
-                    <label class="setting-label">Test Duration</label>
-                    <div class="segmented-control" id="durationControl">
-                        <button data-value="30">30s</button>
-                        <button data-value="60" class="active">60s</button>
-                        <button data-value="120">120s</button>
-                    </div>
-                </div>
-
-                <div class="setting-group">
-                    <label class="setting-label">Difficulty</label>
-                    <div class="segmented-control" id="difficultyControl">
-                        <button data-value="easy">Easy</button>
-                        <button data-value="medium" class="active">Medium</button>
-                        <button data-value="hard">Hard</button>
-                    </div>
-                </div>
 
                 <div class="setting-group">
                     <label class="setting-label">Sound Effects</label>

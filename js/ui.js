@@ -1,5 +1,5 @@
 /* ============================================
-   UI Module - visuals, feedback, keyboard display
+   UI Module - visuals, feedback, animations
    ============================================ */
 
 'use strict';
@@ -8,35 +8,26 @@ const UI = (() => {
 
     let noteColors = HarmoniumAudio.getColors();
 
+    // Level label + badge colors
+    const LEVEL_STYLES = {
+        easy: { label: 'Easy Peasy', color: '#6ef2a1', bg: 'rgba(38, 222, 129, 0.2)', border: 'rgba(38, 222, 129, 0.3)' },
+        mid:  { label: 'Middle Ground', color: '#8dd8ff', bg: 'rgba(32, 191, 230, 0.2)', border: 'rgba(32, 191, 230, 0.3)' },
+        beast:{ label: 'Beast', color: '#ff8a8a', bg: 'rgba(255, 71, 87, 0.2)', border: 'rgba(255, 71, 87, 0.3)' },
+        nums: { label: 'Numbers', color: '#ffd86b', bg: 'rgba(255, 211, 42, 0.2)', border: 'rgba(255, 211, 42, 0.3)' },
+    };
+
     /* ---------- Elements ---------- */
     let els = {};
-
-    // Sargam chart data: key, sargam, western, octave hint
-    const CHART = [
-        { key: 'A', sa: 'सा', west: 'Sa', octave: 'Middle octave' },
-        { key: 'S', sa: 'रे', west: 'Re', octave: 'Middle octave' },
-        { key: 'D', sa: 'गा', west: 'Ga', octave: 'Middle octave' },
-        { key: 'F', sa: 'मा', west: 'Ma', octave: 'Middle octave' },
-        { key: 'G', sa: 'पा', west: 'Pa', octave: 'Middle octave' },
-        { key: 'H', sa: 'धा', west: 'Dha', octave: 'Middle octave' },
-        { key: 'J', sa: 'नी', west: 'Ni', octave: 'Middle octave' },
-        { key: 'K', sa: 'सा˙', west: 'Sa', octave: 'Higher' },
-        { key: 'L', sa: 'रे˙', west: 'Re', octave: 'Higher' },
-    ];
 
     function init() {
         els = {
             bgGradient: document.getElementById('bgGradient'),
-            heroPractice: document.getElementById('heroPractice'),
-            heroTest: document.getElementById('heroTest'),
-            heroSection: document.getElementById('heroSection'),
+            heroLevels: document.getElementById('heroLevels'),
             statsBar: document.getElementById('statsBar'),
             typingSection: document.getElementById('typingSection'),
             wpmDisplay: document.getElementById('wpmDisplay'),
             accuracyDisplay: document.getElementById('accuracyDisplay'),
             timerDisplay: document.getElementById('timerDisplay'),
-            timeLabel: document.getElementById('timeLabel'),
-            timeUnit: document.getElementById('timeUnit'),
             errorDisplay: document.getElementById('errorDisplay'),
             progressDisplay: document.getElementById('progressDisplay'),
             textDisplay: document.getElementById('textDisplay'),
@@ -56,76 +47,31 @@ const UI = (() => {
             resultErrors: document.getElementById('resultErrors'),
             resultTime: document.getElementById('resultTime'),
         };
-        buildNoteChart();
-    }
-
-    function buildNoteChart() {
-        const chartEl = document.getElementById('noteChart');
-        if (!chartEl) return;
-        chartEl.innerHTML = '';
-        const order = ['sa', 're', 'ga', 'ma', 'pa', 'dha', 'ni'];
-        CHART.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'note-card';
-            const idx = CHART.indexOf(item) % 7;
-            const note = order[idx];
-            card.style.background = 'linear-gradient(145deg, ' + noteColors[note] + '33, transparent)';
-            card.style.borderColor = noteColors[note];
-            card.innerHTML = `
-                <span class="nc-key">${item.key}</span>
-                <span class="nc-sa">${item.sa}</span>
-                <span class="nc-west">${item.west}</span>
-                <span class="nc-oct">${item.octave}</span>
-            `;
-            card.addEventListener('click', () => {
-                HarmoniumAudio.playDemoNote(note);
-                card.style.boxShadow = '0 0 30px ' + noteColors[note];
-                setTimeout(() => { card.style.boxShadow = ''; }, 300);
-            });
-            chartEl.appendChild(card);
-        });
     }
 
     /* ---------- Section Management ---------- */
 
-    function showHero(mode) {
+    function showHero() {
+        els.heroLevels.classList.remove('hidden');
         els.statsBar.classList.add('hidden');
         els.typingSection.classList.add('hidden');
-        if (mode === 'test') {
-            els.heroPractice.classList.add('hidden');
-            els.heroTest.classList.remove('hidden');
-        } else {
-            els.heroTest.classList.add('hidden');
-            els.heroPractice.classList.remove('hidden');
-        }
     }
 
-    function showSection(section) {
-        els.heroPractice.classList.add('hidden');
-        els.heroTest.classList.add('hidden');
+    function showSection(level) {
+        els.heroLevels.classList.add('hidden');
         els.statsBar.classList.remove('hidden');
         els.typingSection.classList.remove('hidden');
-        if (section === 'practice') {
-            els.difficultyLabel.textContent = 'Practice Mode · No Timer';
-            els.difficultyLabel.style.background =
-                'linear-gradient(135deg, rgba(38, 222, 129, 0.2), rgba(32, 191, 230, 0.2))';
-            els.difficultyLabel.style.color = '#6ef2a1';
-            els.difficultyLabel.style.borderColor = 'rgba(38, 222, 129, 0.3)';
-            els.feedbackHint.textContent =
-                'No timer · type at your own pace · listen to each swara';
-            els.timeLabel.textContent = 'Elapsed';
-            els.timeUnit.textContent = 's';
-        } else {
-            els.difficultyLabel.textContent = 'Test Mode · Timed';
-            els.difficultyLabel.style.background =
-                'linear-gradient(135deg, rgba(255, 211, 42, 0.2), rgba(255, 140, 66, 0.2))';
-            els.difficultyLabel.style.color = '#ffd86b';
-            els.difficultyLabel.style.borderColor = 'rgba(255, 211, 42, 0.3)';
-            els.feedbackHint.textContent =
-                'Type as fast and as accurately as you can — the clock is running!';
-            els.timeLabel.textContent = 'Time Left';
-            els.timeUnit.textContent = 's';
-        }
+
+        const style = LEVEL_STYLES[level] || LEVEL_STYLES.easy;
+        els.difficultyLabel.textContent = style.label;
+        els.difficultyLabel.style.background =
+            'linear-gradient(135deg, ' + style.bg + ', rgba(255,255,255,0.06))';
+        els.difficultyLabel.style.color = style.color;
+        els.difficultyLabel.style.borderColor = style.border;
+    }
+
+    function setFeedbackHint(text) {
+        els.feedbackHint.textContent = text || 'Start typing to begin...';
     }
 
     /* ---------- Text Rendering ---------- */
@@ -155,48 +101,14 @@ const UI = (() => {
     function updateStats(data) {
         els.wpmDisplay.textContent = data.wpm;
         els.accuracyDisplay.textContent = data.accuracy;
-        els.timerDisplay.textContent = data.time !== undefined
-            ? Math.ceil(data.time)
-            : Math.floor(data.elapsed);
+        els.timerDisplay.textContent = Math.floor(data.elapsed);
         els.errorDisplay.textContent = data.errors;
         els.progressDisplay.textContent = data.progress;
-
-        // Urgent color when time is running low in test mode
-        if (data.time !== undefined && data.time <= 5 && data.time > 0) {
-            els.timerDisplay.style.color = '#ff4757';
-            els.timerDisplay.style.animation = 'charPulse 0.6s ease-in-out infinite';
-        } else {
-            els.timerDisplay.style.color = '';
-            els.timerDisplay.style.animation = '';
-        }
 
         // Update typing counts info
         const totalText = TypingEngine.text ? TypingEngine.text.length : 0;
         els.typingCounts.textContent =
             `Pos ${Math.min(data.charIndex, totalText)}/${totalText} chars`;
-    }
-
-    /* ---------- Countdown Overlay ---------- */
-
-    let countdownEls = null;
-    function showCountdown(number, beatNote) {
-        if (!countdownEls) {
-            countdownEls = {
-                overlay: document.getElementById('countdownOverlay'),
-                num: document.getElementById('countdownNumber'),
-            };
-        }
-        countdownEls.overlay.classList.remove('hidden');
-        countdownEls.num.textContent = number;
-        countdownEls.num.style.animation = 'none';
-        void countdownEls.num.offsetWidth;
-        countdownEls.num.style.animation = 'countPop 0.9s ease';
-        countdownEls.overlay.style.borderColor = beatNote;
-        countdownEls.overlay.style.setProperty('--ring', beatNote);
-    }
-
-    function hideCountdown() {
-        if (countdownEls) countdownEls.overlay.classList.add('hidden');
     }
 
     /* ---------- Feedback (note name) ---------- */
@@ -272,7 +184,7 @@ const UI = (() => {
 
     function showResults(result, title) {
         const titleEl = document.getElementById('resultTitle');
-        if (titleEl) titleEl.textContent = title || '🎉 Test Complete!';
+        if (titleEl) titleEl.textContent = title || '🎵 Practice Complete!';
         els.resultScore.textContent = result.score;
         const gradeObj = result.gradeObj;
 
@@ -326,10 +238,9 @@ const UI = (() => {
         indicateError: shakeDisplay,
         showNoteFeedback,
         clearFeedback,
+        setFeedbackHint,
         shiftBackground,
         spawnNoteParticle,
-        showCountdown,
-        hideCountdown,
         showResults,
         hideResults,
         showSettings,

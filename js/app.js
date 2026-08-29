@@ -6,16 +6,21 @@
 
 const App = (() => {
 
-    // Configuration
-    let mode = 'practice';           // 'practice' | 'test'
-    let duration = 60;               // seconds for test mode
-    let difficulty = 'medium';
+    // Level key -> display label
+    const LEVELS = {
+        easy: { label: 'Easy Peasy', hint: 'Simple lowercase sentences — no punctuation.' },
+        mid:  { label: 'Middle Ground', hint: 'Lowercase with punctuation to keep you sharp.' },
+        beast:{ label: 'Beast', hint: 'Proper case, full punctuation, longer paragraphs.' },
+        nums: { label: 'Numbers', hint: 'Random digits — get those number-row fingers moving!' },
+    };
+
     let soundEnabled = true;
     let clickEnabled = true;
     let scaleStyle = 'sargam';
 
-    // Text pool
-    let textPool = { easy: [], medium: [], hard: [] };
+    // Text pool + current level/text
+    let textPool = { easy: [], mid: [], beast: [], nums: [] };
+    let currentLevel = 'easy';
     let currentText = '';
     let resultShown = false;
 
@@ -32,15 +37,16 @@ const App = (() => {
             console.warn('Could not load text JSON, using fallback:', e);
             textPool = {
                 easy: ['the cat sat on the mat and sang a song'],
-                medium: ['the quick brown fox jumps over the lazy dog'],
-                hard: ['complex sentences with punctuation, hyphens, and numbers 123!'],
+                mid: ['practice daily, and you will improve quickly!'],
+                beast: ['Practice daily, and you will improve; the road is long but steady.'],
+                nums: ['4827 9013 7740 5621'],
             };
         }
     }
 
     function pickText() {
-        const pool = textPool[difficulty] || textPool.medium;
-        if (!pool || !pool.length) return 'the quick brown fox jumps over the lazy dog';
+        const pool = textPool[currentLevel];
+        if (!pool || !pool.length) return 'the cat sat on the mat';
         let picked = pool[Math.floor(Math.random() * pool.length)];
         while (pool.length > 1 && picked === currentText) {
             picked = pool[Math.floor(Math.random() * pool.length)];
@@ -50,56 +56,25 @@ const App = (() => {
 
     /* ---------- Game Setup ---------- */
 
-    let countdownActive = false;
-
-    function startSession(passedMode) {
-        mode = passedMode;
+    function startSession(level) {
+        currentLevel = level;
         resultShown = false;
         currentText = pickText();
 
-        TypingEngine.setDuration(mode === 'test' ? duration : 0);
+        TypingEngine.setDuration(0);
         TypingEngine.loadText(currentText);
 
         els.hiddenInput.value = '';
-        UI.showSection(mode);
+        UI.showSection(level);
         UI.renderText(currentText, 0);
         UI.updateStats({
             wpm: 0, accuracy: 100, elapsed: 0, errors: 0,
-            progress: 0, charIndex: 0,
-            time: mode === 'test' ? duration : undefined
+            progress: 0, charIndex: 0
         });
         UI.clearFeedback();
+        UI.setFeedbackHint(LEVELS[level].hint);
 
-        // Show 3-2-1 countdown for the timed test
-        countdownActive = mode === 'test';
-        if (countdownActive) {
-            runCountdown(() => {
-                countdownActive = false;
-                els.hiddenInput.focus();
-            });
-        } else {
-            els.hiddenInput.focus();
-        }
-    }
-
-    function runCountdown(done) {
-        let count = 3;
-        const notes = ['pa', 'sa', 'sa'];
-        const tick = () => {
-            const noteName = notes[count - 1] || 'sa';
-            UI.showCountdown(count, HarmoniumAudio.getColors()[noteName]);
-            HarmoniumAudio.playDemoNote(noteName);
-            if (count === 1) {
-                setTimeout(() => {
-                    UI.hideCountdown();
-                    done();
-                }, 700);
-                return;
-            }
-            count--;
-            setTimeout(tick, 900);
-        };
-        tick();
+        els.hiddenInput.focus();
     }
 
     /* ---------- Keyboard Handling ---------- */
@@ -110,22 +85,11 @@ const App = (() => {
         'Home', 'End', 'PageUp', 'PageDown', 'Escape',
         'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9',
         'F10', 'F11', 'F12', 'Dead', 'ContextMenu', 'NumLock',
-        'ScrollLock', 'PrintScreen', 'Insert', 'Delete'
+        'ScrollLock', 'PrintScreen', 'Insert', 'Delete', 'Enter'
     ];
 
     function handleKeyDown(e) {
-        // Only handle when test is visible / in session
         if (UI_typingHidden()) return;
-        if (countdownActive) return;
-
-        // Enter finishes early
-        if (e.key === 'Enter') {
-            if (TypingEngine.running && mode === 'test') {
-                e.preventDefault();
-                finishSession();
-            }
-            return;
-        }
 
         if (IGNORED_KEYS.includes(e.key)) return;
 
@@ -137,7 +101,6 @@ const App = (() => {
 
         e.preventDefault();
 
-        // Harmonium sound for every printable key (incl. backspace no sound)
         if (e.key === 'Backspace') {
             if (TypingEngine.finished) return;
             TypingEngine.handleBackspace();
@@ -149,7 +112,6 @@ const App = (() => {
         if (e.key.length === 1) {
             const res = TypingEngine.handleChar(e.key);
             if (!res) {
-                // finished silently
                 if (TypingEngine.isComplete()) finishSession();
                 return;
             }
@@ -183,7 +145,6 @@ const App = (() => {
         return document.getElementById('typingSection').classList.contains('hidden');
     }
 
-    // Re-render text with current correctness and position
     function renderCurrentState() {
         const index = TypingEngine.currentIndex;
         UI.renderText(TypingEngine.text, index, TypingEngine);
@@ -195,9 +156,6 @@ const App = (() => {
             wpm: TypingEngine.getWpm(),
             accuracy: TypingEngine.getAccuracy(),
             elapsed: state.elapsed,
-            time: (mode === 'test' && state.running && !state.finished)
-                ? (duration - state.elapsed)
-                : undefined,
             errors: state.wrongCount,
             progress: TypingEngine.getProgress(),
             charIndex: state.charIndex,
@@ -211,12 +169,8 @@ const App = (() => {
         if (!result) return;
         updateStatsUI();
 
-        if (mode === 'test' || result.complete) {
-            const title = mode === 'test'
-                ? '🏆 Test Complete!'
-                : '🎵 Practice Complete!';
-            UI.showResults(result, title);
-        }
+        const title = '🎵 ' + (LEVELS[currentLevel].label) + ' · Complete!';
+        UI.showResults(result, title);
     }
 
     /* ---------- Timer updates ---------- */
@@ -226,7 +180,6 @@ const App = (() => {
         if (state.running && !state.finished) {
             updateStatsUI();
         } else if (state.finished && !resultShown) {
-            // Time ran out - show the results automatically
             finishSession();
         }
     }
@@ -234,66 +187,42 @@ const App = (() => {
     /* ---------- Events ---------- */
 
     function bindEvents() {
-        // Nav switching - shows the matching page content
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const nav = btn.dataset.nav;
-                if (nav === 'practice' || nav === 'test') {
-                    UI.showHero(nav);
-                    els.hiddenInput.blur();
-                }
+        // Level cards start a session
+        document.querySelectorAll('.level-card').forEach(card => {
+            card.addEventListener('click', () => {
+                startSession(card.dataset.level);
             });
         });
 
-        // In-session nav click: stop current session and go back to that page
-        // (handled above since nav always returns to hero)
-
-        // Hero buttons
-        document.getElementById('startPracticeBtn').addEventListener('click', () => {
-            startSession('practice');
+        // Back to levels
+        document.getElementById('levelsBtn').addEventListener('click', () => {
+            UI.showHero();
         });
 
-        document.getElementById('takeTestBtn').addEventListener('click', () => {
-            startSession('test');
-        });
-
-        // Duration control on Test page
-        document.querySelectorAll('#testDurationControl button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#testDurationControl button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                duration = parseInt(btn.dataset.value, 10);
-                syncSettingsDuration(duration);
-            });
-        });
-
-        // Difficulty control on Test page
-        document.querySelectorAll('#testDifficultyControl button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#testDifficultyControl button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                difficulty = btn.dataset.value;
-                syncSettingsDifficulty(difficulty);
-            });
+        document.getElementById('logoBtn').addEventListener('click', () => {
+            UI.showHero();
         });
 
         // Restart
         document.getElementById('restartBtn').addEventListener('click', () => {
-            startSession(mode);
+            startSession(currentLevel);
         });
 
         // Results modal
         document.getElementById('tryAgainBtn').addEventListener('click', () => {
             UI.hideResults();
-            startSession(mode);
+            startSession(currentLevel);
         });
 
         document.getElementById('newTextBtn').addEventListener('click', () => {
             UI.hideResults();
             currentText = '';
-            startSession(mode);
+            startSession(currentLevel);
+        });
+
+        document.getElementById('changeLevelBtn').addEventListener('click', () => {
+            UI.hideResults();
+            UI.showHero();
         });
 
         document.getElementById('modalClose').addEventListener('click', () => {
@@ -307,26 +236,6 @@ const App = (() => {
 
         document.getElementById('settingsClose').addEventListener('click', () => {
             UI.hideSettings();
-        });
-
-        // Duration control (settings modal)
-        document.querySelectorAll('#durationControl button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#durationControl button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                duration = parseInt(btn.dataset.value, 10);
-                syncTestPageDuration(duration);
-            });
-        });
-
-        // Difficulty control (settings modal)
-        document.querySelectorAll('#difficultyControl button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#difficultyControl button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                difficulty = btn.dataset.value;
-                syncTestPageDifficulty(difficulty);
-            });
         });
 
         // Sound toggles
@@ -390,34 +299,6 @@ const App = (() => {
         btn.textContent = soundEnabled ? '🔊' : '🔇';
     }
 
-    function syncTestPageDuration(val) {
-        const btns = document.querySelectorAll('#testDurationControl button');
-        btns.forEach(b => {
-            b.classList.toggle('active', parseInt(b.dataset.value, 10) === val);
-        });
-    }
-
-    function syncTestPageDifficulty(val) {
-        const btns = document.querySelectorAll('#testDifficultyControl button');
-        btns.forEach(b => {
-            b.classList.toggle('active', b.dataset.value === val);
-        });
-    }
-
-    function syncSettingsDuration(val) {
-        const btns = document.querySelectorAll('#durationControl button');
-        btns.forEach(b => {
-            b.classList.toggle('active', parseInt(b.dataset.value, 10) === val);
-        });
-    }
-
-    function syncSettingsDifficulty(val) {
-        const btns = document.querySelectorAll('#difficultyControl button');
-        btns.forEach(b => {
-            b.classList.toggle('active', b.dataset.value === val);
-        });
-    }
-
     /* ---------- Init ---------- */
 
     async function init() {
@@ -438,7 +319,7 @@ const App = (() => {
         document.getElementById('clickSoundToggle').checked = clickEnabled;
         syncSoundIcon();
 
-        // Gentle ambient particles on the hero
+        // Gentle ambient particles on the levels page
         setInterval(() => {
             if (document.getElementById('typingSection').classList.contains('hidden')) {
                 const notes = ['sa', 're', 'ga', 'ma', 'pa', 'dha', 'ni'];
